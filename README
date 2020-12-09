@@ -1,3 +1,100 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///                                                  Implemented Lazy Page Allocation on XV6                                                                  ///
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Changed File:  proc.h,sysproc.c,trap.c, vm.c,
+
+proc.h : We introduced the oldsize in the process structure to hold the old size of the process. 
+
+sysproc.c : We eliminate page allocation from the sbrk(n) system call implementation, which is the function sys_sbrk() in sysproc.c. The sbrk(n) system call grows the process's memory size by n bytes, and then returns the start of the newly allocated region (i.e., the old size).This methods allocates the memory that may never be used. So we eliminate the growproc and impleted new methods called Lazy page allocation. In this, it will not allocate the memory at first but when the process asks for it, it will create and allocate the memory when needed. 
+
+Trap.c: We added the case to catch a page fault that will catch a faulty address from the userspace process and maps newly-allocated page of physical memory at the faulting address,and then returning back to userspace to let the process continue executing. We also added the declaration for the mappages as below:
+               int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+
+Vm.c : We removed the static from the mappages for it to be able to used by trap.c. 
+
+
+UserTests: 
+$ usertests
+usertests starting
+arg test passed
+createdelete test
+createdelete ok
+linkunlink test
+linkunlink ok
+concreate test
+concreate ok
+fourfiles test
+fourfiles ok
+sharedfd test
+sharedfd ok
+bigarg test
+bigarg test ok
+bigwrite test
+bigwrite ok
+bigarg test
+bigarg test ok
+bss test
+bss test ok
+sbrk test
+sbrk test OK
+validate test
+validate ok
+open test
+open test ok
+small file test
+creat small succeeded; ok
+writes ok
+open small succeeded ok
+read succeeded ok
+small file test ok
+big files test
+big files ok
+many creates, followed by unlink test
+many creates, followed by unlink; ok
+openiput test
+openiput test ok
+exitiput test
+exitiput test ok
+iput test
+iput test ok
+mem test
+allocuvm out of memory
+pipe1 ok
+preempt: kill... wait... preempt ok
+exitwait ok
+rmdot test
+rmdot ok
+fourteen test
+fourteen ok
+bigfile test
+bigfile test ok
+subdir test
+subdir ok
+linktest
+linktest ok
+unlinkread test
+unlinkread ok
+dir vs file
+dir vs file OK
+empty file name
+empty file name OK
+fork test
+fork test OK
+bigdir test
+bigdir ok
+uio test
+pid 605 usertests: trap 13 err 0 on cpu 1 eip 0x3593 addr 0x220581c4--kill proc
+uio test done
+exec test
+ALL TESTS PASSED
+
+//////////////////////////////////////////////////////////**************End**************////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                      XV6- Original-ReadMe                                                                                  ///
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.
